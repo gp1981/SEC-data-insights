@@ -160,6 +160,21 @@ class SECClient:
         url = f"{self.api_url}/companyfacts/CIK{cik}.json"
         return self._make_request(url)
 
+    def get_company_facts(self, cik: str) -> dict:
+        """
+        Get all XBRL facts for a company
+        
+        Args:
+            cik: Company CIK number (will be zero-padded to 10 digits)
+            
+        Returns:
+            dict: Complete company facts data
+        """
+        cik = self._validate_cik(cik)
+        url = f"{self.api_url}/companyfacts/CIK{cik}.json"
+        
+        return self._make_request(url)
+
     @cache_sec_response(expires_after=timedelta(days=7))
     def get_company_concept(self, cik: str, taxonomy: str, tag: str) -> Dict[str, Any]:
         """

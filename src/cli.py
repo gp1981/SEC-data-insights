@@ -12,6 +12,7 @@ from src.examples.process_financial_statements import process_company_financials
 from src.examples.analyze_industry import analyze_company_and_peers
 from src.config import settings
 from click.exceptions import Exit
+from src.utils.data_processor import facts_to_dataframe, load_and_process_facts
 
 def setup_logging(verbose: bool):
     """Configure logging"""
@@ -59,18 +60,66 @@ def company_info(cik):
 
 @cli.command()
 @click.argument('cik')
-@click.option('--concept', default='Assets')
-def get_concept(cik, concept):
+@click.option('--concept', default='Assets', help='Financial concept to retrieve (e.g., Assets, Revenue)')
+@click.option('--taxonomy', default='us-gaap', type=click.Choice(['us-gaap', 'ifrs']), help='Taxonomy to use')
+def get_concept(cik, concept, taxonomy):
     """Get specific financial concept data"""
     try:
         client = SECClient()
-        data = client.get_company_concept(cik, 'us-gaap', concept)
+        data = client.get_company_concept(cik, taxonomy, concept)
         
-        for unit, values in data.get('units', {}).items():
+        if not data.get('units'):
+            click.echo(f"No data found for {concept} using {taxonomy} taxonomy", err=True)
+            raise click.Exit(1)
+            
+        for unit, values in data['units'].items():
             click.echo(f"\nValues in {unit}:")
             for value in values:
                 click.echo(f"{value['end']}: {value['val']:,}")
                 
+    except SECRateLimitError:
+        click.echo("Rate limit exceeded", err=True)
+        raise click.Exit(1)
+    except Exception as e:
+        click.echo(f"Error: {str(e)}", err=True)
+        raise click.Exit(1)
+
+@cli.command()
+@click.argument('cik')
+@click.option('--output', '-o', type=click.Path(), help='Output file path for JSON data')
+def get_company_facts(cik, output):
+    """Get all XBRL facts for a company"""
+    try:
+        client = SECClient()
+        facts = client.get_company_facts(cik)
+        
+        if not facts:
+            click.echo("No facts found for company", err=True)
+            raise click.Exit(1)
+            
+        # Save to file if output path provided
+        if output:
+            output_path = Path(output)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with output_path.open('w') as f:
+                json.dump(facts, f, indent=2)
+            click.echo(f"\nSaved facts data to {output}")
+            
+        # Display summary of available fact categories
+        click.echo("\nAvailable Fact Categories:")
+        for taxonomy, concepts in facts.get('facts', {}).items():
+            concept_count = len(concepts)
+            click.echo(f"{taxonomy}: {concept_count} concepts")
+            
+            # Display sample of concepts
+            if concept_count > 0:
+                sample_concepts = list(concepts.keys())[:5]
+                click.echo("Sample concepts: " + ", ".join(sample_concepts))
+            click.echo()
+                
+    except SECRateLimitError:
+        click.echo("Rate limit exceeded", err=True)
+        raise click.Exit(1)
     except Exception as e:
         click.echo(f"Error: {str(e)}", err=True)
         raise click.Exit(1)
@@ -124,6 +173,51 @@ def clear_sec_cache():
     except Exception as e:
         click.echo(f"Error clearing cache: {str(e)}", err=True)
         raise click.Exit(1)  # Use Exit instead of exceptions.Exit
+
+@cli.command()
+@click.argument('cik')
+@click.option('--output', '-o', type=click.Path(), help='Output file path for processed data')
+@click.option('--format', 'output_format', type=click.Choice(['csv', 'excel']), default='csv')
+def process_facts(cik, output, output_format):
+    """Process company facts into tabular format"""
+    try:
+        # Get facts data
+        client = SECClient()
+        facts = client.get_company_facts(cik)
+        
+        # Convert to DataFrames
+        dataframes = facts_to_dataframe(facts)
+        
+        if not dataframes:
+            click.echo("No processable facts found", err=True)
+            raise click.Exit(1)
+            
+        # Save processed data
+        if output:
+            output_path = Path(output)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            
+            if output_format == 'csv':
+                # Save each DataFrame to separate CSV
+                for name, df in dataframes.items():
+                    csv_path = output_path.parent / f"{output_path.stem}_{name}.csv"
+                    df.to_csv(csv_path, index=False)
+                click.echo(f"\nSaved {len(dataframes)} CSV files to {output_path.parent}")
+            else:
+                # Save all to single Excel file
+                with pd.ExcelWriter(output_path) as writer:
+                    for name, df in dataframes.items():
+                        df.to_excel(writer, sheet_name=name[:31], index=False)
+                click.echo(f"\nSaved data to Excel file: {output_path}")
+        
+        # Display summary
+        click.echo("\nProcessed Facts Summary:")
+        for name, df in dataframes.items():
+            click.echo(f"{name}: {len(df)} records")
+            
+    except Exception as e:
+        click.echo(f"Error processing facts: {str(e)}", err=True)
+        raise click.Exit(1)
 
 if __name__ == '__main__':
     cli()
