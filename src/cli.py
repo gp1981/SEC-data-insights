@@ -176,10 +176,11 @@ def clear_sec_cache():
 
 @cli.command()
 @click.argument('cik')
-@click.option('--output', '-o', type=click.Path(), help='Output file path for processed data')
+@click.option('--output', '-o', type=click.Path(), help='Output file path for processed data (optional)')
 @click.option('--format', 'output_format', type=click.Choice(['csv', 'excel']), default='csv')
-def process_facts(cik, output, output_format):
-    """Process company facts into tabular format"""
+@click.option('--inspect/--no-inspect', default=True, help='Show detailed DataFrame information')
+def process_facts(cik, output, output_format, inspect):
+    """Process company facts into DataFrame and optionally save to file"""
     try:
         # Get facts data
         client = SECClient()
@@ -192,28 +193,36 @@ def process_facts(cik, output, output_format):
             click.echo("No processable facts found", err=True)
             raise click.Exit(1)
             
-        # Save processed data
+        # Display DataFrame information
+        if inspect:
+            click.echo("\nDataFrame Information:")
+            for name, df in dataframes.items():
+                click.echo(f"\n{'-'*50}")
+                click.echo(f"DataFrame: {name}")
+                click.echo(f"Shape: {df.shape}")
+                click.echo("\nColumns:")
+                for col in df.columns:
+                    dtype = df[col].dtype
+                    n_null = df[col].isna().sum()
+                    click.echo(f"- {col}: {dtype} ({n_null} null values)")
+                click.echo("\nSample Data:")
+                click.echo(df.head().to_string())
+        
+        # Save to file if output path provided
         if output:
             output_path = Path(output)
             output_path.parent.mkdir(parents=True, exist_ok=True)
             
             if output_format == 'csv':
-                # Save each DataFrame to separate CSV
                 for name, df in dataframes.items():
                     csv_path = output_path.parent / f"{output_path.stem}_{name}.csv"
                     df.to_csv(csv_path, index=False)
                 click.echo(f"\nSaved {len(dataframes)} CSV files to {output_path.parent}")
             else:
-                # Save all to single Excel file
                 with pd.ExcelWriter(output_path) as writer:
                     for name, df in dataframes.items():
                         df.to_excel(writer, sheet_name=name[:31], index=False)
                 click.echo(f"\nSaved data to Excel file: {output_path}")
-        
-        # Display summary
-        click.echo("\nProcessed Facts Summary:")
-        for name, df in dataframes.items():
-            click.echo(f"{name}: {len(df)} records")
             
     except Exception as e:
         click.echo(f"Error processing facts: {str(e)}", err=True)

@@ -2,6 +2,7 @@ import pandas as pd
 from typing import Dict, List, Any
 from pathlib import Path
 import json
+import logging
 
 def facts_to_dataframe(facts_data: Dict[str, Any]) -> Dict[str, pd.DataFrame]:
     """
@@ -43,6 +44,12 @@ def facts_to_dataframe(facts_data: Dict[str, Any]) -> Dict[str, pd.DataFrame]:
                 # Store with unique key
                 key = f"{taxonomy}_{concept_name}_{unit_type}"
                 dataframes[key] = df
+    
+    # Add debug logging
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Created {len(dataframes)} DataFrames in memory")
+    for name, df in dataframes.items():
+        logger.debug(f"DataFrame {name}: {df.shape} shape, Memory usage: {df.memory_usage().sum() / 1024**2:.2f} MB")
     
     return dataframes
 

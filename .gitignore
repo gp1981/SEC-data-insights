@@ -51,13 +51,11 @@ logs/
 *.log
 
 # SEC Data and Analysis Files
+sec_filing/
+test_output.txt
 data/*.json
 data/*.csv
 data/*.xlsx
-*.json
-!settings.json
-!package.json
-test_output.txt
 .cache/
 
 # OS specific
