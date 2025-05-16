@@ -84,21 +84,24 @@ python -m src.cli company-info 0000028917
 ```bash
 # Get specific financial metrics
 python -m src.cli get-concept 0000028917 --concept Assets
-python -m src.cli get-concept 0000028917 --concept Revenue --taxonomy us-gaap
+python -m src.cli get-concept 0000028917 --concept RevenueFromContractWithCustomerExcludingAssessedTax --taxonomy us-gaap
 
 # Supported concepts:
 # - Assets, Liabilities, Equity
 # - Revenue, NetIncome, OperatingIncome
 # - And many more US-GAAP/IFRS concepts
+# Note: US-GAAP Facts in XBRL dataseta are named differently than in the financial report.
+# For example: Dillard's Revenue in the XBRL dataset is "RevenueFromContractWithCustomerExcludingAssessedTax"
+
 ```
 
 #### Industry Analysis
 ```bash
-# Analyze peer companies
-python -m src.cli analyze-peers 0000028917 --metric Revenue --year 2023 --quarter 4
+# Analyze peer companies (WIP)
+# python -m src.cli analyze-peers 0000028917 --metric RevenueFromContractWithCustomerExcludingAssessedTax --year 2023 --quarter 4
 
-# Compare multiple metrics
-python -m src.cli analyze-peers 0000028917 --metrics Revenue,NetIncome,Assets
+# Compare multiple metrics (WIP)
+# python -m src.cli analyze-peers 0000028917 --metrics RevenueFromContractWithCustomerExcludingAssessedTax,NetIncomeLoss,Assets
 ```
 
 #### Cache Management
@@ -106,8 +109,8 @@ python -m src.cli analyze-peers 0000028917 --metrics Revenue,NetIncome,Assets
 # Clear all cached data
 python -m src.cli clear-sec-cache
 
-# Clear specific cache patterns
-python -m src.cli clear-sec-cache --pattern "company-info"
+# Clear specific cache patterns (WIP)
+# python -m src.cli clear-sec-cache --pattern "company-info"
 ```
 
 ### API Integration
@@ -319,7 +322,27 @@ pytest
 
 ## License
 
-[Add your license information here]
+MIT License
+
+Copyright (c) 2025 gp1981
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## Acknowledgments
 
