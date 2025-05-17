@@ -13,10 +13,10 @@ class IndustryAnalyzer:
         self.client = sec_client or SECClient()
         self.key_metrics = {
             'Assets': {'tag': 'Assets', 'unit': 'USD'},
-            'Revenue': {'tag': 'Revenues', 'unit': 'USD'},
-            'NetIncome': {'tag': 'NetIncomeLoss', 'unit': 'USD'},
-            'OperatingIncome': {'tag': 'OperatingIncomeLoss', 'unit': 'USD'},
-            'EarningsPerShare': {'tag': 'EarningsPerShareDiluted', 'unit': 'USD-per-shares'}
+            # 'Revenue': {'tag': 'Revenues', 'unit': 'USD'},
+            'NetIncomeLoss': {'tag': 'NetIncomeLoss', 'unit': 'USD'},
+            # 'OperatingIncome': {'tag': 'OperatingIncomeLoss', 'unit': 'USD'},
+            # 'EarningsPerShare': {'tag': 'EarningsPerShareDiluted', 'unit': 'USD-per-shares'}
         }
 
     def get_industry_metrics(self, 

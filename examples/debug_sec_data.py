@@ -1,3 +1,10 @@
+import sys
+import os
+
+# Add the project root to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+
 import pandas as pd
 from src.utils.sec_client import SECClient
 from src.utils.data_processor import facts_to_dataframe
