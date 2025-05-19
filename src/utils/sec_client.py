@@ -28,6 +28,7 @@ class SECClient:
     
     def __init__(self):
         self.base_url = "https://data.sec.gov"
+        self.base_url_company_list = "https://www.sec.gov"
         self.submissions_url = f"{self.base_url}/submissions"
         self.api_url = f"{self.base_url}/api/xbrl"
         self.headers = {
@@ -115,7 +116,7 @@ class SECClient:
             SECRateLimitError: If rate limit is exceeded
             SECDataError: If data retrieval fails
         """
-        url = f"{self.base_url}/files/company_tickers.json"
+        url = f"{self.base_url_company_list}/files/company_tickers.json"
         return self._make_request(url)
 
     @cache_sec_response(expires_after=timedelta(hours=6))
